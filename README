@@ -1,0 +1,5 @@
+This is a Complete Virtual City which contains museums, restaurants, beaches, theatres, library, temple, hotels, and dynamic video panels and advertisements.
+The video panels are clickable, in the sense that they will play and pause when they are clicked.
+The directory is to be run on a server, or a localhost, as the textures and images are included. It can be nodejs, python, etc.
+To nagivate through the city, there are w-a-s-d controls, and click and move the mouse to move the view of the scenery.
+There are people, and decorative houses in the city.
