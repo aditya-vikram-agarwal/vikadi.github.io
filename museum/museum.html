@@ -1,0 +1,307 @@
+<html>
+<head>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-16322526-4', 'auto');
+  ga('send', 'pageview');
+
+</script>
+<script src="https://cdn.rawgit.com/chenzlabs/aframe/gearvr-survive-invalid-tick-time-dist/dist/aframe-master.min.js"></script>
+<script src="https://cdn.rawgit.com/chenzlabs/gearvr-controls/v0.1.2/dist/aframe-gearvr-controls-component.min.js"></script>
+<script src="https://cdn.rawgit.com/chenzlabs/aframe-teleport-controls/v0.1.1/dist/aframe-teleport-controls.js"></script>
+<script src="https://cdn.rawgit.com/chenzlabs/aframe-bmfont-component/release/dist/aframe-bmfont-component.min.js"></script>
+<script src="https://cdn.rawgit.com/chenzlabs/aframe-src-fit-component/f76c3217efa7c2e57eeccc5cb9f863d6b3696f2a/dist/aframe-src-fit-component.min.js"></script>
+<script>
+// any extras would go here
+
+AFRAME.registerComponent('placardbelow', {
+  multiple: true,
+
+  schema: {
+    value: { type: 'string', default: '' },
+    distance: { type: 'number', default: 0.5 },
+    height: { type: 'number', default: 0.1 },
+    wrapcount: { type: 'number', default: 40 }
+  },
+  init: function () {
+    var titleEl = this[this.attrName] = document.createElement('a-plane');    
+    titleEl.setAttribute('inherit-fit', 'width');
+    titleEl.setAttribute('width', '1');
+    titleEl.setAttribute('side', 'double');
+    titleEl.setAttribute('material', 'color: #FFF');
+    titleEl.setAttribute('bmfont-text', 'fnt', 'https://cdn.rawgit.com/chenzlabs/aframe-bmfont-component/4b8fa074289be8ca9cb11b96557c5e7b3b763c18/fonts/KelsonSans.fnt');
+    titleEl.setAttribute('bmfont-text', 'color', 'black');
+    titleEl.setAttribute('bmfont-text', 'align', 'center');
+    this.el.appendChild(titleEl);
+  },
+  update: function () {
+    var titleEl = this[this.attrName];
+    titleEl.setAttribute('position', '0 -' + this.data.distance + ' 0');
+    titleEl.setAttribute('height', this.data.height);
+    titleEl.setAttribute('bmfont-text', 'text', this.data.value);
+    titleEl.setAttribute('bmfont-text', 'wrapcount', this.data.wrapcount);
+  }
+});
+
+AFRAME.registerPrimitive('a-exhibit', AFRAME.utils.extendDeep({}, AFRAME.primitives.getMeshMixin(), {
+  defaultComponents: {
+    geometry: {
+      depth: 0.03,
+      primitive: 'box'
+    },
+    material: {
+      color: '#FFF',
+      shader: 'flat',
+      side: 'double',
+      transparent: true
+    },
+    placardbelow__title: { distance: 0.8, height: 0.2, wrapcount:20 },
+    placardbelow__description: { distance: 1.1, height: 0.4, wrapcount: 32 },
+    'src-fit': {}
+  },
+
+  mappings: {
+    height: 'geometry.height',
+    width: 'geometry.width',
+    title: 'placardbelow__title.value',
+    description: 'placardbelow__description.value'
+  }
+}));
+
+AFRAME.registerComponent('auto-hand-controls', {
+  dependencies: ['tracked-controls'], // to make sure the system is present
+
+  init: function () {
+    this.tick = AFRAME.utils.throttleTick ? 
+      AFRAME.utils.throttleTick(this.throttledTick, 1000, this) : 
+      this.throttledTick.bind(this);
+  },
+
+  throttledTick: function (t, dt) {
+    var hands = [];
+    var isPresent = true;
+    if (AFRAME.utils.trackedControls.isControllerPresent(this.el.sceneEl, undefined, {})) {
+      hands.push('left');
+      hands.push('right');
+    } else
+    if (AFRAME.utils.gearvrControls && AFRAME.utils.gearvrControls.isControllerPresent()) {
+      hands.push('right');
+    } else {
+      isPresent = false;
+    }
+    if (this.isPresent === isPresent) { return; }
+    this.isPresent = isPresent;
+    if (isPresent) {
+      this.hand = this.hand || {};
+      hands.forEach(function (hand) {
+        var handEl = this.hand[hand] = document.createElement('a-entity');
+        handEl.setAttribute('id', hand + '-hand');
+        handEl.setAttribute('hand-controls', hand);
+        if (hand === 'right') { handEl.setAttribute('gearvr-controls', ''); }
+        // TODO: move this into event handling
+        handEl.setAttribute('teleport-controls', 'collisionEntity', '#ground');
+        this.el.appendChild(handEl);
+      }, this);
+      this.el.emit('lookmanewhands', {hands: this.hand});
+    } else
+    if (this.hand) {
+      Object.keys(this.hand).forEach(function (hand) {
+        var handEl = this.hand && this.hand[hand];
+        if (handEl) {
+          delete this.hand[hand];
+          if (handEl.parentNode) { handEl.parentNode.removeChild(handEl); }
+        }
+      }, this);
+      this.el.emit('lookmanohands', {});
+    }
+  }
+});
+
+// FIXME: broken!
+
+AFRAME.registerGeometry('triangle', {
+  schema: {vertices: {default: ['-10 10 0', '-10 -10 0', '10 -10 0']}},
+
+  init: function (data) {
+    var geometry = new THREE.Geometry();
+    geometry.vertices.push.call(
+      geometry.vertices,
+      data.vertices.map(function (vertex) {
+        var points = vertex.split(' ').map(parseFloat);
+        return new THREE.Vector3(points[0], points[1], points[2]);
+      })
+    );
+    geometry.faces.push(new THREE.Face3(0, 1, 2));
+    this.geometry = geometry;
+  }
+});
+
+</script>
+</head>
+
+<body>
+
+<a-scene auto-hand-controls>
+<div onclick="window.location='page1.html';" >go back!</div>
+<a-light color="#333" position ="-1 1 0"></a-light>
+<a-light color="#333" position ="-1 -1 0"></a-light>
+<a-light type="ambient" color="#CCC"></a-light>
+<a-box id="ground" material="src:images/white-marble-floor.jpeg; repeat: 16 16; side: double" width="50" height="0.1" depth="50" position="0 -0.05 0" rotation="0 0 0"></a-box>
+</a-scene>
+
+<script src='paintings.js'></script>
+<script>
+
+// double-click/tap or scroll to move forward in camera direction
+
+var moveScale = 1;
+var scrollScale = 0.1;
+
+function moveForward(distance) {
+  // TODO: don't go through walls
+  var camera = document.querySelector('a-scene').camera;
+  var position = camera.el.getAttribute('position');
+  var rotationEuler = new THREE.Euler(0 /* camera.el.object3D.rotation.x */, camera.el.object3D.rotation.y, 0, 'YXZ');
+  var movementVector = new THREE.Vector3(0, 0, -distance);
+  movementVector.applyEuler(rotationEuler);
+  camera.el.setAttribute('position', { x: position.x + movementVector.x, y: position.y + movementVector.y, z: position.z + movementVector.z });
+}
+
+var clickTimer;
+function doIfRepeatEventHandler(callback, args) {
+ var fn = callback;
+ return function (evt) {
+  if (clickTimer == null) {
+    clickTimer = setTimeout(function () { clickTimer = null; }, 500);
+  } else {
+    clearTimeout(clickTimer);
+    // clickTimer = null;
+    // to allow more repeats
+    clickTimer = setTimeout(function () { clickTimer = null; }, 500);
+    // fire the callback
+    fn(args);
+  }
+ }
+};
+
+var moveHandler = doIfRepeatEventHandler(moveForward, moveScale);
+window.addEventListener('touchstart', moveHandler);
+window.addEventListener('click', moveHandler);
+
+window.addEventListener('wheel', function (evt) { moveForward(scrollScale * evt.wheelDelta); });
+
+// define the gallery
+
+var exhibitWidth = 2;
+var sides = 5;
+var sideHeight = 3;
+var pedestalDistance = 2;
+var exhibits = GALLERY.paintings;
+
+// compute variables
+
+var paintingsPerSide = Math.floor(1 + (GALLERY.paintings.length - 1) / sides);
+var sideLength = exhibitWidth * paintingsPerSide + (exhibitWidth - 1); // fudge for margin at extreme edges
+var radius = sideLength / (2 * Math.tan(Math.PI / sides)); // for 4 sides...
+
+// customize note text to the platform
+
+var noteText = 'Welcome to the\r\nA-Frame WebVR\r\n\r\nAlice Chen Gallery!\r\n\r\nPlease feel free to take a look around.\r\n\r\n';
+if (AFRAME.utils.isMobile()) {
+    noteText += 'Touch and drag to change your view.'
+      + '\r\n\r\n' + 'Repeat-tap to move forward.'
+      + '\r\n\r\n' + 'If you are using Gear VR, swipe up and hold, then release to teleport.';
+} else {
+  noteText += 'Drag to change your view; repeat-click, scroll or use arrow keys to move.'
+    + '\r\n\r\n' + 'Or... put on your VR headset, and teleport by pointing with your hands.'
+    + '\r\n\r\n' + 'Vive: press & hold trackpad'
+    + '\r\n' + "Touch: hold grip, rest thumb, don't touch trigger";
+};
+
+// build a crude gallery
+
+for (var i = 0; i < sides; i++) {
+  // create the container and rotate it appropriately
+  var containerEl = document.createElement('a-entity');
+  containerEl.setAttribute('rotation', '0 ' + (360.0 * i / sides) + ' 0');
+
+  // create a pedestal
+  var pedestalEl = document.createElement('a-entity');
+  pedestalEl.setAttribute('geometry', 'primitive:cylinder;height:1;radius:0.5');
+  pedestalEl.setAttribute('material', 'side:double;color:#887');
+  pedestalEl.setAttribute('position', '0 0 -' + pedestalDistance);
+  containerEl.appendChild(pedestalEl);
+
+  // put a note on the pedestal
+  var noteEl = document.createElement('a-plane');
+  noteEl.setAttribute('width', '1');
+  noteEl.setAttribute('height', '2');
+  noteEl.setAttribute('position', '0 1.5 0');
+  noteEl.setAttribute('rotation', '0 0 0');
+  noteEl.setAttribute('material', 'color:#FFF; opacity: 0.75; side:double');
+  noteEl.setAttribute('bmfont-text', 'fnt', 'https://cdn.rawgit.com/chenzlabs/aframe-bmfont-component/4b8fa074289be8ca9cb11b96557c5e7b3b763c18/fonts/KelsonSans.fnt');
+  noteEl.setAttribute('bmfont-text', 'color', 'black');
+  noteEl.setAttribute('bmfont-text', 'align', 'center');
+  noteEl.setAttribute('bmfont-text', 'text', noteText);
+  noteEl.setAttribute('bmfont-text', 'wrapcount', '20');
+  pedestalEl.appendChild(noteEl);
+
+  // create the side wall
+  var sideEl = document.createElement('a-entity');
+  sideEl.setAttribute('geometry', 'primitive:box; depth:1; width:' + sideLength + '; height:' + sideHeight);
+  sideEl.setAttribute('material', 'shader:standard;src:images/texture.jpg;side:double;color:#EED');
+  sideEl.setAttribute('position', '0 ' + (sideHeight / 2) + ' -' + (radius + 0.5));
+  containerEl.appendChild(sideEl);
+
+  // create a label for the side wall
+  var labelEl = document.createElement('a-entity');
+  labelEl.setAttribute('position', '0 ' + (sideHeight * 7 / 8) + ' -' + radius);
+  labelEl.setAttribute('bmfont-text', 'width', '3');
+  labelEl.setAttribute('bmfont-text', 'color', 'black');
+  labelEl.setAttribute('bmfont-text', 'align', 'center');
+  labelEl.setAttribute('bmfont-text', 'fnt', 'https://cdn.rawgit.com/chenzlabs/aframe-bmfont-component/4b8fa074289be8ca9cb11b96557c5e7b3b763c18/fonts/KelsonSans.fnt');
+  labelEl.setAttribute('bmfont-text', 'text', 'Alice Chen Gallery');
+  containerEl.appendChild(labelEl);
+
+  // create an angle plane for the roof
+  // TODO: figure out how to do properly with triangles
+  var inclineDegrees = 5; // 0 is horizontal
+  var sin = Math.sin(inclineDegrees * Math.PI / 180);
+  var cos = Math.cos(inclineDegrees * Math.PI / 180);
+  var roofEl = document.createElement('a-entity');
+  roofEl.setAttribute('geometry', 'primitive:box; depth:0.001');
+  roofEl.setAttribute('material', 'shader:standard;src:images/texture.jpg;side:double;color:#FFF');
+  roofEl.setAttribute('position', '0 ' + (sideHeight + Math.tan(inclineDegrees * Math.PI / 180) * radius / 2) + ' -' + (radius / 2));
+  roofEl.setAttribute('rotation', '' + (90 - inclineDegrees) + ' 0 0');
+  roofEl.setAttribute('scale', '' + sideLength + ' ' + radius / cos + ' ' + radius);
+  containerEl.appendChild(roofEl);
+
+  // create the paintings on the wall
+  var xrange = exhibitWidth * (paintingsPerSide - 1);
+  var xpos = -xrange / 2;
+  var xstep = xrange / (paintingsPerSide - 1);
+  var joffset = paintingsPerSide * i;
+  for (var j = 0; (j + joffset < exhibits.length) && (j < paintingsPerSide); j++) {
+    var painting = exhibits[j+joffset];
+    if (painting) {
+      var el = document.createElement('a-exhibit');
+      el.setAttribute('src', 'images/' + painting.src);
+      el.setAttribute('title', painting.title);
+      el.setAttribute('description', painting.description);
+      el.setAttribute('position', '' + xpos + ' ' + (sideHeight / 2 + 0.25) + ' -' + (radius - 0.01)); // pull in from the walls to avoid glitches at distance
+      containerEl.appendChild(el);
+      xpos += xstep;
+    }
+  }
+  document.querySelector('a-scene').appendChild(containerEl);
+}
+
+</script>
+
+</body>
+
+</html>
