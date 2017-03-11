@@ -1,38 +1,21 @@
-<!DOCTYPE html>
 <HTML>
 	<HEAD>
-  		
 		<TITLE>
-
 			City
-		
 		</TITLE>
 		<script src="https://aframe.io/releases/0.3.1/aframe.min.js"></script>
-  		
 		<script src="https://rawgit.com/ngokevin/aframe-firebase-component/master/dist/aframe-firebase-component.min.js"></script>
-  		
 		<script src="https://ngokevin.github.io/aframe-firebase-component/basic/components/random-position.js"></script>
-  		
 		<script src="https://cdn.rawgit.com/donmccurdy/aframe-extras/v2.3.0/dist/aframe-extras.min.js"></script>
-		
 		<script src="//cdn.rawgit.com/donmccurdy/aframe-extras/v3.2.0/dist/aframe-extras.min.js"></script>
-		
 		<script src="https://rawgit.com/donmccurdy/aframe-extras/v2.1.1/dist/aframe-extras.loaders.min.js"></script>
-
-	
 	</HEAD>
-	
 	<BODY>
-  		
-		<a-scene>
-			
-		<!--A-ASSETS-->
-    			
-			<a-assets>
-				 
+		<a-scene>	
+		<!--A-ASSETS-->	
+			<a-assets> 
 				<a-asset-item id="self" src="https://ucarecdn.com/fbcb4698-a381-4c48-a1cd-b738d0fee1be/">
 				</a-asset-item>
-	
 				<script id="cloud-template" type="text/x-nunjucks-template">
                 			<a-entity layout="type: circle; radius: 18" position="0 1.8 0">
                     				{% for x in range(num) %}
@@ -48,52 +31,34 @@
                 			</a-entity>            			
 				</script>
 	
-				
 				<!--WORKER ASSETS-->
 				<a-asset-item id="worker1" src="./daeobjects/collada/chr_worker1.dae"></a-asset-item>
 				<a-asset-item id="worker2" src="./daeobjects/collada/chr_worker2.dae"></a-asset-item>
 				<a-asset-item id="worker3" src="./daeobjects/collada/chr_worker3.dae"></a-asset-item>
-
 	
 				<!--BUILDING ASSETS-->		
-				<img id="buildingone" src="BuildingTextures/buildingone.jpg" />
-							
+				<img id="buildingone" src="BuildingTextures/buildingone.jpg" />			
 				<img id="HighRiseNight0009" src="BuildingTextures/HighRiseNight0009.jpg" />
-				
 				<img id="HighRiseNight0015" src="BuildingTextures/HighRiseNight0015.jpg" />
-				
 				<img id="HighRiseNight0025" src="BuildingTextures/HighRiseNight0025.jpg" />
-				
 				<img id="HighRiseNight0037" src="BuildingTextures/HighRiseNight0037.jpg" />
-				
 				<img id="HighRiseNight0037_2" src="BuildingTextures/HighRiseNight0037_2.jpg" />
-
 				<img id="HighRiseNight0057_2" src="BuildingTextures/HighRiseNight0057_2.jpg" />
-
 				<img id="HighRiseNight0071_2" src="BuildingTextures/HighRiseNight0071_2.jpg" />
-
 				<img id="HighRiseNight0017" src="BuildingTextures/HighRiseNight0017.jpg" />
 				<img id="HighRiseNight0008" src="BuildingTextures/HighRiseNight0008.jpg" />
 
 				<!--ADVERTISEMENT ASSETS-->
 				<img id="logo" src="advertisements/logo.png" />
-
 				<img id="restaurant" src="advertisements/restaurant.jpg" />
-
 				<img id="mobilephone" src="advertisements/mobilephone.jpg" />
-
 				<img id="kitkat" src="advertisements/kitkat.jpg" />
-
 				<img id="signboard" src="advertisements/signboard.jpg" />
-
 				<img id="craftshop" src="advertisements/craftshop.jpg" />
 				<img id="fuschia" src="advertisements/fuschia.jpg" />
 				<img id="cheese" src="advertisements/cheese.jpg" />
 				<img id="cococola" src="advertisements/cococola.jpg" />
 				
-					
-				</a-asset-item>
-	
 				<a-asset-item id="restaurantboundarywall" src="restaurantboundarywall.dae">	
 				</a-asset-item>
 	
