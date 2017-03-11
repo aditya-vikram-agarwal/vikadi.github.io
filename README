@@ -1,3 +1,4 @@
+Run the "Virtual City.html" file to run the Virtual City, which can best be visualized in HTC Vive, Occulus, etc.
 This is a Complete Virtual City which contains museums, restaurants, beaches, theatres, library, temple, hotels, and dynamic video panels and advertisements.
 The video panels are clickable, in the sense that they will play and pause when they are clicked.
 The directory is to be run on a server, or a localhost, as the textures and images are included. It can be nodejs, python, etc.
